@@ -1,8 +1,9 @@
 
 
-CFLAGS+=-I../../lib/ -I../../forge_socket -Wall
+#CFLAGS+=-I../../lib/ -I../../forge_socket -Wall
+CFLAGS+=-I/home/wrs/squidcache/zmap/lib -I/home/wrs/squidcache/forge_socket -Wall
 LDFLAGS+=-lpcap -levent -levent_extra -lm
-VPATH=../../lib/
+VPATH=/home/wrs/squidcache/zmap/lib/
 
 # from dpkg-buildflags --get CFLAGS, but use stack-protector-all and fPIC
 GCCHARDENING=-g -O2 -fstack-protector-all --param=ssp-buffer-size=4 -Wformat -Wformat-security -Werror=format-security -fPIC

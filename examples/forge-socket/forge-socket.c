@@ -45,6 +45,8 @@ struct config {
 		int timed_out;				// # hosts that timed out at all (conn_timed_out+read_timed_out)?
 		int completed_hosts;		// # hosts that presented a banner
 	} stats;
+
+	struct event *ev_status_timer;
 };
 
 
@@ -63,12 +65,12 @@ void stdin_readcb(struct bufferevent *bev, void *arg);
 
 void print_status(evutil_socket_t fd, short events, void *arg)
 {
-	struct event *ev;
 	struct config *conf = arg;
 	struct event_base *base = conf->base;
 	struct timeval status_timeout = {1, 0};
-	ev = evtimer_new(base, print_status, conf);
-	evtimer_add(ev, &status_timeout);
+	//ev = evtimer_new(base, print_status, conf);
+	evtimer_assign(conf->ev_status_timer, base, print_status, conf);
+	evtimer_add(conf->ev_status_timer, &status_timeout);
 	(void)fd; (void)events;
 
 	log_info("forge-socket", "(%d/%d in use) - Totals: %d inited, %d connected, %d conn timeout, %d read timeout %d completed", 
@@ -197,6 +199,7 @@ void read_cb(struct bufferevent *bev, void *arg)
 				printf("%c%c%c%c\n", out[0], out[1], out[2], out[3]);
 			}
 		}
+		printf("=-=-=-=-=-=-=-=-=-=-\n");
 		fflush(stdout);
 
 		free(buf);
@@ -369,13 +372,14 @@ void stdin_readcb(struct bufferevent *bev, void *arg)
 		    conf->current_running++;
 		    grab_banner(st);
         }
+	free(line);
 	}
 }
 
 int main(int argc, char *argv[])
 {
 	struct event_base *base;
-	struct event *status_timer;
+	//struct event *status_timer;
 	struct timeval status_timeout = {1, 0};
 	int c;
 	struct option long_options[] = {
@@ -408,8 +412,8 @@ int main(int argc, char *argv[])
 	bufferevent_enable(conf.stdin_bev, EV_READ);
 
 	// Status timer
-	status_timer = evtimer_new(base, print_status, &conf);
-	evtimer_add(status_timer, &status_timeout);
+	conf.ev_status_timer = evtimer_new(base, print_status, &conf);
+	evtimer_add(conf.ev_status_timer, &status_timeout);
 
 	// Defaults
 	conf.max_concurrent = 1;
